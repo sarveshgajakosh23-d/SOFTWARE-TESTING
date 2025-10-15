@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Healing Embedded System Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #111827;
+            color: #f3f4f6;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 1.5rem;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #22d3ee, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .metric-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .control-panel {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-panel h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-fault {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-fault:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-heal {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-heal:hover {
+            background-color: #15803d;
+        }
+
+        .btn-reset {
+            background-color: #4b5563;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #374151;
+        }
+
+        .btn-download {
+            background-color: #0891b2;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background-color: #0e7490;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+
+        .speed-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .speed-btn {
+            padding: 0.25rem 0.75rem;
+            background-color: #374151;
+            color: white;
+        }
+
+        .speed-btn.active {
+            background-color: #0891b2;
+        }
+
+        .modules-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-section {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        .module-section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+        }
+
+        .module {
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .module-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .module-status {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .status-active {
+            background-color: #22c55e;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+        }
+
+        .status-faulty {
+            background-color: #ef4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        .status-healing {
+            background-color: #eab308;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+            animation: pulse 1s infinite;
+        }
+
+        .status-backup {
+            background-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border: 2px solid #60a5fa;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .logs-section {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        .logs-section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .logs-table {
+            width: 100%;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+
+        .logs-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logs-table th {
+            text-align: left;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #374151;
+        }
+
+        .logs-table td {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+
+        .logs-table tr:hover {
+            background-color: rgba(55, 65, 81, 0.3);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-critical {
+            background-color: #dc2626;
+        }
+
+        .badge-healing {
+            background-color: #ca8a04;
+        }
+
+        .badge-recovered {
+            background-color: #16a34a;
+        }
+
+        .badge-info {
+            background-color: #4b5563;
+        }
+
+        .badge-warning {
+            background-color: #ea580c;
+        }
+
+        .empty-logs {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .legend {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .module-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div class="header-title">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    <h1>Self-Healing Embedded System Simulator</h1>
+                </div>
+                <div style="color: #9ca3af; font-size: 0.875rem;">
+                    Defense Computing Prototype
+                </div>
+            </div>
+            <p class="header-subtitle">
+                Real-time fault detection, isolation, and autonomous recovery simulation
+            </p>
+        </div>
+
+        <!-- Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">System Health</div>
+                <div class="metric-value" id="health-metric" style="color: #22c55e;">100%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Active Modules</div>
+                <div class="metric-value" id="active-metric" style="color: #22c55e;">5/5</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Faulty Modules</div>
+                <div class="metric-value" id="faulty-metric" style="color: #ef4444;">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Backups Active</div>
+                <div class="metric-value" id="backup-metric" style="color: #3b82f6;">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Recoveries</div>
+                <div class="metric-value" id="heal-metric" style="color: #22d3ee;">0</div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                    <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
+                Control Panel
+            </h2>
+            <div class="button-group">
+                <button class="btn-fault" onclick="injectFault()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Inject Fault
+                </button>
+                <button class="btn-heal" onclick="healAll()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Heal All
+                </button>
+                <button class="btn-reset" onclick="resetSimulation()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    Reset Simulation
+                </button>
+                <button class="btn-download" onclick="downloadLogs()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Logs
+                </button>
+            </div>
+            <div class="controls-row">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="autoMode" onchange="toggleAutoMode()">
+                    <span style="font-weight: 600;">Auto Mode (Random Faults)</span>
+                </label>
+                <div class="speed-controls">
+                    <span style="color: #9ca3af; font-size: 0.875rem;">Simulation Speed:</span>
+                    <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
+                    <button class="speed-btn" onclick="setSpeed(5)">5x</button>
+                    <button class="speed-btn" onclick="setSpeed(10)">10x</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modules -->
+        <div class="modules-container">
+            <div class="module-section">
+                <h2>Primary Modules</h2>
+                <div class="module-grid" id="primary-modules"></div>
+            </div>
+            <div class="module-section">
+                <h2>Backup Modules</h2>
+                <div class="module-grid" id="backup-modules"></div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="logs-section">
+            <h2>System Logs</h2>
+            <div class="logs-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Module</th>
+                            <th>Action</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-body">
+                        <tr>
+                            <td colspan="4" class="empty-logs">
+                                No logs yet. Start the simulation to see system events.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #22c55e;"></div>
+                <span>Active</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ef4444;"></div>
+                <span>Faulty</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #eab308;"></div>
+                <span>Healing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #3b82f6;"></div>
+                <span>Backup Active</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const modules = {
+            A: { status: 'active', isBackup: false },
+            B: { status: 'active', isBackup: false },
+            C: { status: 'active', isBackup: false },
+            D: { status: 'active', isBackup: false },
+            E: { status: 'active', isBackup: false },
+            "A'": { status: 'active', isBackup: true },
+            "B'": { status: 'active', isBackup: true },
+            "C'": { status: 'active', isBackup: true },
+            "D'": { status: 'active', isBackup: true },
+            "E'": { status: 'active', isBackup: true }
+        };
+
+        let logs = [];
+        let autoMode = false;
+        let faultCount = 0;
+        let healCount = 0;
+        let simulationSpeed = 1;
+        let autoModeInterval = null;
+
+        // Initialize modules display
+        function initModules() {
+            const primaryContainer = document.getElementById('primary-modules');
+            const backupContainer = document.getElementById('backup-modules');
+
+            ['A', 'B', 'C', 'D', 'E'].forEach(name => {
+                primaryContainer.innerHTML += createModuleHTML(name);
+            });
+
+            ["A'", "B'", "C'", "D'", "E'"].forEach(name => {
+                backupContainer.innerHTML += createModuleHTML(name);
+            });
+
+            updateDisplay();
+        }
+
+        function createModuleHTML(name) {
+            return `
+                <div id="module-${name}" class="module status-active">
+                    <div class="module-name">${name}</div>
+                    <div class="module-status">active</div>
+                </div>
+            `;
+        }
+
+        function updateDisplay() {
+            // Update modules
+            Object.keys(modules).forEach(name => {
+                const element = document.getElementById(`module-${name}`);
+                const status = modules[name].status;
+                element.className = `module status-${status}`;
+                element.querySelector('.module-status').textContent = status;
+            });
+
+            // Update metrics
+            const metrics = calculateMetrics();
+            document.getElementById('health-metric').textContent = 
+                Math.round(((metrics.active + metrics.healing) / metrics.total) * 100) + '%';
+            document.getElementById('active-metric').textContent = `${metrics.active}/${metrics.total}`;
+            document.getElementById('faulty-metric').textContent = metrics.faulty;
+            document.getElementById('backup-metric').textContent = metrics.backupActive;
+            document.getElementById('heal-metric').textContent = healCount;
+        }
+
+        function calculateMetrics() {
+            const primaryModules = ['A', 'B', 'C', 'D', 'E'];
+            const active = primaryModules.filter(m => modules[m].status === 'active').length;
+            const faulty = primaryModules.filter(m => modules[m].status === 'faulty').length;
+            const healing = primaryModules.filter(m => modules[m].status === 'healing').length;
+            const backupActive = Object.keys(modules).filter(m => 
+                m.includes("'") && modules[m].status === 'backup'
+            ).length;
+            
+            return { active, faulty, healing, backupActive, total: 5 };
+        }
+
+        function addLog(moduleName, action, status) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                id: Date.now(),
+                time: timestamp,
+                module: moduleName,
+                action,
+                status
+            };
+            logs.unshift(logEntry);
+            logs = logs.slice(0, 50);
+            updateLogs();
+        }
+
+        function updateLogs() {
+            const tbody = document.getElementById('logs-body');
+            if (logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-logs">
+                            No logs yet. Start the simulation to see system events.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td style="color: #9ca3af;">${log.time}</td>
+                    <td style="font-weight: 600;">${log.module}</td>
+                    <td>${log.action}</td>
+                    <td>
+                        <span class="status-badge badge-${log.status.toLowerCase()}">
+                            ${log.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function injectFault() {
+            const primaryModules = ['A', 'B', 'C', 'D', 'E'];
+            const activeModules = primaryModules.filter(m => modules[m].status === 'active');
+            
+            if (activeModules.length === 0) {
+                addLog('SYSTEM', 'No active modules to fault', 'WARNING');
+                return;
+            }
+
+            const targetModule = activeModules[Math.floor(Math.random() * activeModules.length)];
+            const backupModule = targetModule + "'";
+
+            modules[targetModule].status = 'faulty';
+            updateDisplay();
+            addLog(targetModule, 'Fault Detected', 'CRITICAL');
+            faultCount++;
+
+            setTimeout(() => {
+                modules[targetModule].status = 'healing';
+                updateDisplay();
+                addLog(targetModule, 'Initiating Self-Healing', 'HEALING');
+
+                setTimeout(() => {
+                    modules[targetModule].status = 'faulty';
+                    modules[backupModule].status = 'backup';
+                    updateDisplay();
+                    addLog(backupModule, 'Backup Activated', 'RECOVERED');
+                    healCount++;
+                    updateDisplay();
+                }, 1000 / simulationSpeed);
+            }, 500 / simulationSpeed);
+        }
+
+        function healAll() {
+            let healed = false;
+
+            Object.keys(modules).forEach(key => {
+                if (modules[key].status === 'faulty') {
+                    modules[key].status = 'active';
+                    addLog(key, 'Manual Recovery Complete', 'RECOVERED');
+                    healed = true;
+                }
+                if (modules[key].status === 'backup') {
+                    modules[key].status = 'active';
+                }
+            });
+
+            if (healed) {
+                updateDisplay();
+            } else {
+                addLog('SYSTEM', 'No modules to heal', 'INFO');
+            }
+        }
+
+        function resetSimulation() {
+            Object.keys(modules).forEach(key => {
+                modules[key].status = 'active';
+            });
+            logs = [];
+            faultCount = 0;
+            healCount = 0;
+            autoMode = false;
+            document.getElementById('autoMode').checked = false;
+            if (autoModeInterval) {
+                clearTimeout(autoModeInterval);
+                autoModeInterval = null;
+            }
+            updateDisplay();
+            updateLogs();
+            addLog('SYSTEM', 'Simulation Reset', 'INFO');
+        }
+
+        function downloadLogs() {
+            const csv = [
+                ['Timestamp', 'Module', 'Action', 'Status'],
+                ...logs.map(log => [log.time, log.module, log.action, log.status])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `system-logs-${Date.now()}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleAutoMode() {
+            autoMode = document.getElementById('autoMode').checked;
+            if (autoMode) {
+                scheduleAutoFault();
+            } else {
+                if (autoModeInterval) {
+                    clearTimeout(autoModeInterval);
+                    autoModeInterval = null;
+                }
+            }
+        }
+
+        function scheduleAutoFault() {
+            if (!autoMode) return;
+            
+            const interval = (2000 + Math.random() * 3000) / simulationSpeed;
+            autoModeInterval = setTimeout(() => {
+                injectFault();
+                scheduleAutoFault();
+            }, interval);
+        }
+
+        function setSpeed(speed) {
+            simulationSpeed = speed;
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Initialize on load
+        initModules();
+    </script>
+</body>
+</html>
